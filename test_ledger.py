@@ -171,12 +171,12 @@ def test_get_balance_mixed_transactions():
     ledger.add_transaction(transaction4)
     ledger.add_transaction(transaction5)
     ledger.add_transaction(transaction6)
-    assert ledger.get_balance=={"income": 2000.5, "expense": 800, "balance": 1199.5}
+    assert ledger.get_balance()=={"income": 2000.5, "expense": 800, "balance": 1200.5}
 
 
 def test_get_balance_empty_ledger():
     ledger = BudgetLedger()
-    assert ledger.get_balance=={"income": 0, "expense": 0, "balance": 0}
+    assert ledger.get_balance()=={"income": 0, "expense": 0, "balance": 0}
 def test_save_and_load_success(tmp_path):
     ledger = BudgetLedger()
     file_path= tmp_path/'Transactions.json'
@@ -217,7 +217,7 @@ def test_load_missing_field(tmp_path):
 def test_load_invalid_transaction_data(tmp_path):
     ledger = BudgetLedger()
     file_path= tmp_path/'invalid data.json'
-    file_path.write_text('[{"description": "Study", "amount": 200, "kind":"income"},{"description": "Study", "amount": True, "kind":"income"}]')
+    file_path.write_text('[{"description": "Study", "amount": 200, "kind":"income"},{"description": "Study", "amount": true, "kind":"income"}]')
     assert ledger.load_from_file(file_path)=={"status": "error", "message": "Invalid transaction data"}
 
 

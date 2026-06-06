@@ -59,7 +59,6 @@ class BudgetLedger:
     def get_balance(self):
         total_income = 0
         total_expense = 0
-        balance = total_income - total_expense
         for transaction in self.transactions:
             if transaction.kind == "income":
                 total_income = total_income + transaction.amount
