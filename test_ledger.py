@@ -62,7 +62,7 @@ def test_add_rejects_invalid_transaction():
     assert len(ledger2.tasks)==0
     ledger3 = BudgetLedger()
     transaction3=("Salary", 1000, "check")
-    assert ledger3.add_transaction(transaction3==){"status": "error", "message": "Invalid transaction data"}
+    assert ledger3.add_transaction(transaction3)=={"status": "error", "message": "Invalid transaction data"}
     assert len(ledger3.tasks)==0
 
 def test_find_transaction_first_item():
