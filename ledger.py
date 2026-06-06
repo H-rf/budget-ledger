@@ -7,29 +7,28 @@ class BudgetLedger:
 
     def transaction_to_dict(self, transaction):
         return {
-            "description": transaction.descitpion,
+            "description": transaction.description,
             "amount": transaction.amount,
             "kind": transaction.kind}
 
     def is_valid_transaction_values(self, description, amount, kind):
         return (
             type(description)==str
-            and type(amount)==int or type(amount)==float
-            and type(kind)=="income" or type(kind)=="expense"
+            and (type(amount)==int or type(amount)==float)
+            and (kind == "income" or kind=="expense")
             and amount > 0
-            and amount != bool
+            and type(amount) != bool
             and description != ""
-            and kind != ""
-            )
+        )
 
     def add_transaction(self, transaction):
         if not self.is_valid_transaction_values(transaction.description, transaction.amount, transaction.kind):
-            {"status": "error", "message": "Invalid transaction data"}
-        self.transactions(transaction)
+            return {"status": "error", "message": "Invalid transaction data"}
+        self.transactions.append(transaction)
         return {"status": "ok"}
 
     def find_transaction(self, description):
-        if description == str and description != "":
+        if type(description) == str and description != "":
             for transaction in self.transactions:
                 if description == transaction.description:
                     return {
@@ -40,7 +39,7 @@ class BudgetLedger:
         return {"status": "error", "message": "Invalid transaction data"}
 
     def update_amount(self, description, new_amount):
-        if type(new_amount)==int or type(new_amount)==float and new_amount >0 and new_amount !=bool:
+        if (type(new_amount)==int or type(new_amount)==float) and new_amount >0 and new_amount !=bool:
             for transaction in self.transactions:
                 if description == transaction.description:
                     transaction.amount = new_amount
@@ -67,11 +66,8 @@ class BudgetLedger:
             if transaction.kind == "expense":
                 total_expense = total_expense + transaction.amount
 
-
-        return {"income": total_income,
-                "expense": total_expense,
-                "balance": balance
-                }
+        balance = total_income - total_expense
+        return {"income": total_income, "expense": total_expense, "balance": balance}
 
     def save_to_file(self, filename):
         data = []

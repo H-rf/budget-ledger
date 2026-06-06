@@ -6,4 +6,4 @@ class Transaction:
         self.kind = kind
 
     def __repr__(self):
-        return f"Task(title={self.description!r}, priority={self.amount!r}, done={self.kind!r})"
+        return f"Transaction(description={self.description!r}, amount={self.amount!r}, kind={self.kind!r})"
