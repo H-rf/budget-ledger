@@ -12,14 +12,19 @@ class BudgetLedger:
             "kind": transaction.kind}
 
     def is_valid_transaction_values(self, description, amount, kind):
+         return (
+             type(description) == str
+             and description != ""
+             and self.is_valid_amount(amount)
+             and (kind == "income" or kind == "expense")
+            )
+
+    def is_valid_amount(self, amount):
         return (
-            type(description)==str
-            and (type(amount)==int or type(amount)==float)
-            and (kind == "income" or kind=="expense")
-            and amount > 0
-            and type(amount) != bool
-            and description != ""
-        )
+             (type(amount) == int or type(amount) == float)
+             and type(amount) != bool
+             and amount > 0
+            )
 
     def add_transaction(self, transaction):
         if not self.is_valid_transaction_values(transaction.description, transaction.amount, transaction.kind):
@@ -28,24 +33,25 @@ class BudgetLedger:
         return {"status": "ok"}
 
     def find_transaction(self, description):
-        if type(description) == str and description != "":
-            for transaction in self.transactions:
-                if description == transaction.description:
-                    return {
-                "status": "ok",
-                "transaction": self.transaction_to_dict(transaction)
+        for transaction in self.transactions:
+            if transaction.description == description:
+                return {
+                  "status": "ok",
+                  "transaction": self.transaction_to_dict(transaction)
                 }
-            return {"status": "error", "message": "Transaction not found"}
-        return {"status": "error", "message": "Invalid transaction data"}
+
+        return {"status": "error", "message": "Transaction not found"}
 
     def update_amount(self, description, new_amount):
-        if (type(new_amount)==int or type(new_amount)==float) and new_amount >0 and new_amount !=bool:
-            for transaction in self.transactions:
-                if description == transaction.description:
-                    transaction.amount = new_amount
-                    return {"status": "ok"}
-            return {"status": "error", "message": "Transaction not found"}
-        return {"status": "error", "message": "Invalid amount"}
+         if not self.is_valid_amount(new_amount):
+             return {"status": "error", "message": "Invalid amount"}
+
+         for transaction in self.transactions:
+             if transaction.description == description:
+                 transaction.amount = new_amount
+                 return {"status": "ok"}
+
+         return {"status": "error", "message": "Transaction not found"}
 
     
     def delete_transaction(self, description):
