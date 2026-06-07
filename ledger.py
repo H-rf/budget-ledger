@@ -5,13 +5,13 @@ class BudgetLedger:
     def __init__(self):
         self.transactions = []
 
-    def transaction_to_dict(self, transaction):
+    def transaction_to_dict(self, transaction) -> dict:
         return {
             "description": transaction.description,
             "amount": transaction.amount,
             "kind": transaction.kind}
 
-    def is_valid_transaction_values(self, description, amount, kind):
+    def is_valid_transaction_values(self, description, amount, kind) -> bool:
          return (
              type(description) == str
              and description != ""
@@ -19,20 +19,20 @@ class BudgetLedger:
              and (kind == "income" or kind == "expense")
             )
 
-    def is_valid_amount(self, amount):
+    def is_valid_amount(self, amount) -> bool:
         return (
              (type(amount) == int or type(amount) == float)
              and type(amount) != bool
              and amount > 0
             )
 
-    def add_transaction(self, transaction):
+    def add_transaction(self, transaction) -> dict:
         if not self.is_valid_transaction_values(transaction.description, transaction.amount, transaction.kind):
             return {"status": "error", "message": "Invalid transaction data"}
         self.transactions.append(transaction)
         return {"status": "ok"}
 
-    def find_transaction(self, description):
+    def find_transaction(self, description) -> dict:
         for transaction in self.transactions:
             if transaction.description == description:
                 return {
@@ -42,7 +42,7 @@ class BudgetLedger:
 
         return {"status": "error", "message": "Transaction not found"}
 
-    def update_amount(self, description, new_amount):
+    def update_amount(self, description, new_amount) -> dict:
          if not self.is_valid_amount(new_amount):
              return {"status": "error", "message": "Invalid amount"}
 
@@ -54,7 +54,7 @@ class BudgetLedger:
          return {"status": "error", "message": "Transaction not found"}
 
     
-    def delete_transaction(self, description):
+    def delete_transaction(self, description) -> dict:
         for transaction in self.transactions:
             if transaction.description == description:
                 self.transactions.remove(transaction)
@@ -62,7 +62,7 @@ class BudgetLedger:
         return {"status": "error", "message": "Transaction not found"}
 
 
-    def get_balance(self):
+    def get_balance(self) -> dict:
         total_income = 0
         total_expense = 0
         for transaction in self.transactions:
@@ -74,7 +74,7 @@ class BudgetLedger:
         balance = total_income - total_expense
         return {"income": total_income, "expense": total_expense, "balance": balance}
 
-    def save_to_file(self, filename):
+    def save_to_file(self, filename) -> dict:
         data = []
         for transaction in self.transactions:
             data.append(self.transaction_to_dict(transaction))
@@ -83,7 +83,7 @@ class BudgetLedger:
         return {"status": "ok"}
 
     
-    def load_from_file(self, filename):
+    def load_from_file(self, filename) -> dict:
         loaded_transactions = []
         try:
             with open (filename, "r") as file:
