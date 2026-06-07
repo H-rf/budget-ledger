@@ -50,3 +50,5 @@ A small Python project for tracking income and expense transactions.
 
 pytest
 
+python -m pip install -r requirements.txt
+
