@@ -5,7 +5,7 @@ class BudgetLedger:
     def __init__(self):
         self.transactions = []
 
-    def transaction_to_dict(self, transaction) -> dict:
+    def transaction_to_dict(self, transaction: Transaction) -> dict:
         return {
             "description": transaction.description,
             "amount": transaction.amount,
@@ -26,13 +26,13 @@ class BudgetLedger:
              and amount > 0
             )
 
-    def add_transaction(self, transaction) -> dict:
+    def add_transaction(self, transaction: Transaction) -> dict:
         if not self.is_valid_transaction_values(transaction.description, transaction.amount, transaction.kind):
             return {"status": "error", "message": "Invalid transaction data"}
         self.transactions.append(transaction)
         return {"status": "ok"}
 
-    def find_transaction(self, description) -> dict:
+    def find_transaction(self, description: str) -> dict:
         for transaction in self.transactions:
             if transaction.description == description:
                 return {
@@ -42,7 +42,7 @@ class BudgetLedger:
 
         return {"status": "error", "message": "Transaction not found"}
 
-    def update_amount(self, description, new_amount) -> dict:
+    def update_amount(self, description: str, new_amount: int | float) -> dict:
          if not self.is_valid_amount(new_amount):
              return {"status": "error", "message": "Invalid amount"}
 
@@ -54,7 +54,7 @@ class BudgetLedger:
          return {"status": "error", "message": "Transaction not found"}
 
     
-    def delete_transaction(self, description) -> dict:
+    def delete_transaction(self, description: str) -> dict:
         for transaction in self.transactions:
             if transaction.description == description:
                 self.transactions.remove(transaction)
