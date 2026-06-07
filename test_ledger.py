@@ -39,6 +39,18 @@ def test_add_valid_transaction():
     assert len(ledger.transactions)==2
 
 
+def test_valid_amount_helper():
+    ledger = BudgetLedger()
+
+    assert ledger.is_valid_amount(100)
+    assert ledger.is_valid_amount(100.5)
+
+    assert not ledger.is_valid_amount("100")
+    assert not ledger.is_valid_amount(True)
+    assert not ledger.is_valid_amount(0)
+    assert not ledger.is_valid_amount(-10)
+
+
 def test_add_rejects_invalid_transaction():
     ledger = BudgetLedger()
     transaction =Transaction("", 500, "income")
