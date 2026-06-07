@@ -179,20 +179,23 @@ def test_get_balance_empty_ledger():
     assert ledger.get_balance()=={"income": 0, "expense": 0, "balance": 0}
 def test_save_and_load_success(tmp_path):
     ledger = BudgetLedger()
-    file_path= tmp_path/'Transactions.json'
-    transaction1=Transaction("Salary", 1000, "income")
-    transaction2=Transaction("Grocery", 400, "expense")
-    transaction3=Transaction("Entertainment", -150, "expense")
-    transaction4=Transaction("", 500, "income")
-    transaction5=Transaction("Salary2", 1000, "income")
-    transaction6=Transaction("Grocery2", 400, "expense")  
-    ledger.add_transaction(transaction1)
-    ledger.add_transaction(transaction2)
-    ledger.add_transaction(transaction3)
-    ledger.add_transaction(transaction4)
-    ledger.add_transaction(transaction5)
-    ledger.add_transaction(transaction6)
-    assert ledger.save_to_file(file_path)=={"status": "ok"}
+    file_path = tmp_path / "transactions.json"
+
+    ledger.add_transaction(Transaction("Salary", 1000, "income"))
+    ledger.add_transaction(Transaction("Grocery", 400, "expense"))
+    ledger.add_transaction(Transaction("Salary2", 1000, "income"))
+    ledger.add_transaction(Transaction("Grocery2", 400, "expense"))
+
+    assert ledger.save_to_file(file_path) == {"status": "ok"}
+
+    ledger2 = BudgetLedger()
+    assert ledger2.load_from_file(file_path) == {"status": "ok"}
+    assert len(ledger2.transactions) == 4
+    assert ledger2.get_balance() == {
+        "income": 2000,
+        "expense": 800,
+        "balance": 1200
+    }
 def test_load_missing_file(tmp_path):
     file_path= tmp_path/'missing.json'
     ledger = BudgetLedger()
@@ -224,21 +227,22 @@ def test_load_invalid_transaction_data(tmp_path):
 
 def test_load_is_atomic_when_later_record_invalid(tmp_path):
     ledger = BudgetLedger()
-    file_path= tmp_path/'atomic.json'
-    transaction1=Transaction("Salary", 1000, "income")
-    transaction2=Transaction("Grocery", 400, "expense")
-    transaction3=Transaction("Entertainment", -150, "expense")
-    transaction4=Transaction("", 500, "income")
-    transaction5=Transaction("Salary2", 1000, "income")
-    transaction6=Transaction("Grocery2", 400, "expense")  
-    ledger.add_transaction(transaction1)
-    ledger.add_transaction(transaction2)
-    ledger.add_transaction(transaction3)
-    ledger.add_transaction(transaction4)
-    ledger.add_transaction(transaction5)
-    ledger.add_transaction(transaction6)
-    assert ledger.save_to_file(file_path)=={"status": "ok"}
-    ledger2 = BudgetLedger()
-    ledger2.load_from_file(file_path)
-    assert len(ledger2.transactions)==4
+    file_path = tmp_path / "atomic.json"
+
+    ledger.add_transaction(Transaction("Existing", 50, "income"))
+
+    file_path.write_text(
+        '[{"description": "Salary", "amount": 1000, "kind": "income"}, '
+        '{"description": "Broken", "amount": true, "kind": "income"}]'
+    )
+
+    assert ledger.load_from_file(file_path) == {
+        "status": "error",
+        "message": "Invalid transaction data"
+    }
+
+    assert len(ledger.transactions) == 1
+    assert ledger.transactions[0].description == "Existing"
+    assert ledger.transactions[0].amount == 50
+    assert ledger.transactions[0].kind == "income"
 
