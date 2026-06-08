@@ -14,3 +14,15 @@ def home():
 @app.get("/balance")
 def get_balance():
     return ledger.get_balance()
+
+@app.get("/transactions")
+def get_transactions():
+    transactions = []
+
+    for transaction in ledger.transactions:
+        transactions.append(ledger.transaction_to_dict(transaction))
+
+    return {
+        "status": "ok",
+        "transactions": transactions
+    }
