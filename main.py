@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 
 from ledger import BudgetLedger
@@ -39,15 +39,20 @@ def get_transactions():
         "transactions": transactions
     }
 
-@app.post("/transactions")
+@app.post("/transactions", status_code=status.HTTP_201_CREATED)
 def create_transaction(transaction_input: TransactionInput):
     transaction = Transaction(
         transaction_input.description,
         transaction_input.amount,
         transaction_input.kind
     )
-
     result = ledger.add_transaction(transaction)
+    
+    if result["status"] == "error":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["message"]
+        )
 
     return result
 
