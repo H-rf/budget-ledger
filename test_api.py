@@ -83,3 +83,24 @@ def test_create_transaction_invalid_kind_returns_400():
     
     assert response.status_code==400
     assert response.json()=={"detail": "Invalid transaction data"}
+
+def test_created_transaction_appears_in_transactions_list():
+    create_response=client.post("/transactions",
+    json={
+  "description": "Salary",
+  "amount": 1000,
+  "kind": "income"
+})
+    assert create_response.status_code == 201
+    response=client.get("/transactions")
+    assert response.status_code == 200
+    assert response.json()=={
+    "status": "ok",
+    "transactions": [
+        {
+            "description": "Salary",
+            "amount": 1000,
+            "kind": "income"
+        }
+    ]
+}
