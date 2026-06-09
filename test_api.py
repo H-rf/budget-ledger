@@ -104,3 +104,29 @@ def test_created_transaction_appears_in_transactions_list():
         }
     ]
 }
+
+def test_find_existing_transaction_by_description():
+    create_response=client.post("/transactions",
+    json={
+  "description": "Salary",
+  "amount": 1000,
+  "kind": "income"
+})
+    assert create_response.status_code==201
+    response=client.get("/transactions/Salary")
+    assert response.status_code==200
+    assert response.json()=={
+    "status": "ok",
+    "transaction": {
+        "description": "Salary",
+        "amount": 1000,
+        "kind": "income"
+    }
+}
+
+def test_find_missing_transaction_returns_404():
+    response = client.get("/transactions/DoesNotExist")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Transaction not found"}
+
