@@ -82,4 +82,19 @@ def find_transaction(description: str):
 
 @app.patch("/transactions/{description}")
 def update_transaction_amount(description: str, amount_update: AmountUpdate):
-    return ledger.update_amount(description, amount_update.amount)                
+    result = ledger.update_amount(description, amount_update.amount)
+
+    if result["status"] == "error":
+        if result["message"] == "Transaction not found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=result["message"]
+            )
+
+        if result["message"] == "Invalid amount":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=result["message"]
+            )
+
+    return result               
