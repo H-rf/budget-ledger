@@ -130,3 +130,25 @@ def test_find_missing_transaction_returns_404():
     assert response.status_code == 404
     assert response.json() == {"detail": "Transaction not found"}
 
+def test_delete_existing_transaction_removes_it():
+    create_response = client.post(
+        "/transactions",
+        json={
+            "description": "Salary",
+            "amount": 1000,
+            "kind": "income"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    delete_response = client.delete("/transactions/Salary")
+
+    assert delete_response.status_code == 200
+    assert delete_response.json() == {"status": "ok"}
+
+    find_response = client.get("/transactions/Salary")
+
+    assert find_response.status_code == 404
+    assert find_response.json() == {"detail": "Transaction not found"}    
+
