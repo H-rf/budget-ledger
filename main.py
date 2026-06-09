@@ -15,6 +15,9 @@ class TransactionInput(BaseModel):
     amount: int | float
     kind: str
 
+class AmountUpdate(BaseModel):
+    amount: int | float
+
 @app.get("/")
 def home():
     return {"message": "Budget Ledger API"}
@@ -54,4 +57,8 @@ def delete_transaction(description: str):
 
 @app.get("/transactions/{description}")
 def find_transaction(description: str):
-    return ledger.find_transaction(description)            
+    return ledger.find_transaction(description)
+
+@app.patch("/transactions/{description}")
+def update_transaction_amount(description: str, amount_update: AmountUpdate):
+    return ledger.update_amount(description, amount_update.amount)                
