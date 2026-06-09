@@ -21,6 +21,7 @@ def test_get_balance_initially_zero():
         "balance": 0
     }
 
+
 def test_create_transaction_success():
     response = client.post(
         "/transactions",
@@ -33,6 +34,7 @@ def test_create_transaction_success():
 
     assert response.status_code == 201
     assert response.json() == {"status": "ok"}    
+
 
 def test_created_transaction_appears_in_transactions_list():
     client.post(
@@ -57,3 +59,27 @@ def test_created_transaction_appears_in_transactions_list():
             }
         ]
     }    
+
+
+def test_create_income_transaction_returns_201():
+    response=client.post("/transactions",
+    json={
+  "description": "Salary",
+  "amount": 1000,
+  "kind": "income"
+})
+
+    assert response.status_code==201
+    assert response.json() == {"status": "ok"}
+
+
+def test_create_transaction_invalid_kind_returns_400():
+    response=client.post("/transactions",
+    json={
+    "description": "Salary",
+    "amount": 1000,
+    "kind": "banana"
+})
+    
+    assert response.status_code==400
+    assert response.json()=={"detail": "Invalid transaction data"}
