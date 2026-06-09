@@ -47,3 +47,7 @@ def create_transaction(transaction_input: TransactionInput):
     result = ledger.add_transaction(transaction)
 
     return result
+
+@app.delete("/transactions/{description}")
+def delete_transaction(description: str):
+            ledger.delete_transaction(description)
