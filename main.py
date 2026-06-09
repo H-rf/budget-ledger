@@ -51,3 +51,7 @@ def create_transaction(transaction_input: TransactionInput):
 @app.delete("/transactions/{description}")
 def delete_transaction(description: str):
             ledger.delete_transaction(description)
+
+@app.get("/transactions/{description}")
+def find_transaction(description: str):
+    return ledger.find_transaction(description)            
