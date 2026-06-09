@@ -150,5 +150,76 @@ def test_delete_existing_transaction_removes_it():
     find_response = client.get("/transactions/Salary")
 
     assert find_response.status_code == 404
-    assert find_response.json() == {"detail": "Transaction not found"}    
+    assert find_response.json() == {"detail": "Transaction not found"} 
+
+def test_update_transaction_valid_new_amount():
+    create_response=client.post(
+        "/transactions",
+        json={
+            "description": "Salary",
+            "amount": 1000,
+            "kind": "income"
+        }
+    )
+
+    assert create_response.status_code==201
+    patch_response=client.patch("/transactions/Salary",
+    json={
+        "amount": 1200
+    })
+    assert patch_response.status_code==200
+    find_response=client.get("/transactions/Salary")
+    assert find_response.status_code==200
+    assert find_response.json() == {
+    "status": "ok",
+    "transaction": {
+        "description": "Salary",
+        "amount": 1200,
+        "kind": "income"
+    }
+}
+
+def test_update_transaction_invalid_new_amount():
+    create_response=client.post(
+        "/transactions",
+        json={
+            "description": "Salary",
+            "amount": 1000,
+            "kind": "income"
+        }
+    )
+
+    assert create_response.status_code==201
+    patch_response=client.patch("/transactions/Salary",
+    json={
+        "amount": -112
+    })
+    assert patch_response.status_code==400
+    find_response=client.get("/transactions/Salary")
+    assert find_response.status_code==200
+    assert find_response.json() == {
+    "status": "ok",
+    "transaction": {
+            "description": "Salary",
+            "amount": 1000,
+            "kind": "income"
+        }
+}
+
+
+def test_update_non_existing_transaction():
+    patch_response=client.patch("/transactions/Salary",
+    json={
+        "amount": 1000
+    })
+    assert patch_response.status_code==404
+    find_response=client.get("/transactions/Salary")
+    assert find_response.status_code == 404
+    assert find_response.json() == {"detail": "Transaction not found"}
+
+
+    
+
+
+
 
