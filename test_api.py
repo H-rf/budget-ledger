@@ -218,6 +218,37 @@ def test_update_non_existing_transaction():
     assert find_response.json() == {"detail": "Transaction not found"}
 
 
+def test_balance_updates_after_income_and_expense():
+    create_response1=client.post(
+        "/transactions",
+        json={
+            "description": "Salary",
+            "amount": 1000,
+            "kind": "income"
+        }
+    )
+    assert create_response1.status_code==201
+    create_response2=client.post(
+        "/transactions",
+        json={
+          "description": "Rent",
+          "amount": 300,
+          "kind": "expense"
+        }
+    )
+    assert create_response2.status_code==201
+    balance_response=client.get("/balance")
+    assert balance_response.status_code==200
+    assert balance_response.json()=={
+        "income": 1000,
+        "expense": 300,
+        "balance": 700
+    }
+
+
+
+
+
     
 
 
