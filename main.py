@@ -58,7 +58,15 @@ def create_transaction(transaction_input: TransactionInput):
 
 @app.delete("/transactions/{description}")
 def delete_transaction(description: str):
-            ledger.delete_transaction(description)
+    result = ledger.delete_transaction(description)
+
+    if result["status"] == "error":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=result["message"]
+        )
+
+    return result
 
 @app.get("/transactions/{description}")
 def find_transaction(description: str):
