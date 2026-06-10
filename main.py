@@ -9,6 +9,22 @@ app = FastAPI()
 
 ledger = BudgetLedger()
 
+def raise_http_error_for_result(result):
+    if result["status"] != "error":
+        return
+
+    if result["message"] == "Transaction not found":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=result["message"]
+        )
+
+    if result["message"] in ["Invalid transaction data", "Invalid amount"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["message"]
+        )
+
 
 class TransactionInput(BaseModel):
     description: str
@@ -72,11 +88,7 @@ def delete_transaction(description: str):
 def find_transaction(description: str):
     result = ledger.find_transaction(description)
 
-    if result["status"] == "error":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=result["message"]
-        )
+    raise_http_error_for_result(result)
 
     return result
 
@@ -97,4 +109,4 @@ def update_transaction_amount(description: str, amount_update: AmountUpdate):
                 detail=result["message"]
             )
 
-    return result               
+    return result             
