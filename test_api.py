@@ -5,6 +5,16 @@ from main import app, ledger
 
 client = TestClient(app)
 
+def create_transaction(description="Salary", amount=1000, kind="income"):
+    return client.post(
+        "/transactions",
+        json={
+            "description": description,
+            "amount": amount,
+            "kind": kind
+        }
+    )
+
 
 @pytest.fixture(autouse=True)
 def reset_ledger():
@@ -219,23 +229,9 @@ def test_update_non_existing_transaction():
 
 
 def test_balance_updates_after_income_and_expense():
-    create_response1=client.post(
-        "/transactions",
-        json={
-            "description": "Salary",
-            "amount": 1000,
-            "kind": "income"
-        }
-    )
+    create_response1=create_transaction()
     assert create_response1.status_code==201
-    create_response2=client.post(
-        "/transactions",
-        json={
-          "description": "Rent",
-          "amount": 300,
-          "kind": "expense"
-        }
-    )
+    create_response2=create_transaction("Rent", 300, "expense")
     assert create_response2.status_code==201
     balance_response=client.get("/balance")
     assert balance_response.status_code==200
