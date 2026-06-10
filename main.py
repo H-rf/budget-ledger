@@ -60,6 +60,12 @@ def get_transactions():
         "transactions": transactions
     }
 
+@app.get("/transactions/count")
+def get_transaction_count():
+    return {"count": len(ledger.transactions)}
+
+
+
 @app.post("/transactions", status_code=status.HTTP_201_CREATED)
 def create_transaction(transaction_input: TransactionInput):
     transaction = Transaction(

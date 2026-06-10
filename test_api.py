@@ -265,6 +265,19 @@ def test_create_transaction_invalid_amount_type_returns_422():
     assert response.status_code==422    
 
 
+def test_transaction_count_after_creating_transactions():
+    response1 = create_transaction()
+    assert response1.status_code == 201
+
+    response2 = create_transaction("Rent", 300, "expense")
+    assert response2.status_code == 201
+
+    response = client.get("/transactions/count")
+
+    assert response.status_code == 200
+    assert response.json() == {"count": 2}
+
+
 
 
 
