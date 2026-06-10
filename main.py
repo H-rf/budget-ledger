@@ -49,11 +49,12 @@ def get_balance():
     return ledger.get_balance()
 
 @app.get("/transactions")
-def get_transactions():
+def get_transactions(kind: str | None = None):
     transactions = []
 
     for transaction in ledger.transactions:
-        transactions.append(ledger.transaction_to_dict(transaction))
+        if kind is None or transaction.kind == kind:
+            transactions.append(ledger.transaction_to_dict(transaction))
 
     return {
         "status": "ok",

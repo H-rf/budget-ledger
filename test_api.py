@@ -277,6 +277,43 @@ def test_transaction_count_after_creating_transactions():
     assert response.status_code == 200
     assert response.json() == {"count": 2}
 
+def test_get_transactions_filters_by_kind():
+    response1 = create_transaction()
+    assert response1.status_code == 201
+
+    response2 = create_transaction("Shopping", 300, "expense")
+    assert response2.status_code == 201
+
+    expense_response = client.get("/transactions?kind=expense")
+
+    assert expense_response.status_code == 200
+    assert expense_response.json() == {
+        "status": "ok",
+        "transactions": [
+            {
+                "description": "Shopping",
+                "amount": 300,
+                "kind": "expense"
+            }
+        ]
+    }
+
+    income_response = client.get("/transactions?kind=income")
+
+    assert income_response.status_code == 200
+    assert income_response.json() == {
+        "status": "ok",
+        "transactions": [
+            {
+                "description": "Salary",
+                "amount": 1000,
+                "kind": "income"
+            }
+        ]
+    }
+
+
+
 
 
 
