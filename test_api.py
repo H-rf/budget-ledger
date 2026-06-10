@@ -240,10 +240,36 @@ def test_balance_updates_after_income_and_expense():
     balance_response=client.get("/balance")
     assert balance_response.status_code==200
     assert balance_response.json()=={
-        "income": 1000,
-        "expense": 300,
-        "balance": 700
-    }
+                                  "income": 1000,
+                                  "expense": 300,
+                                  "balance": 700
+                                }
+
+def test_create_transaction_missing_amount_returns_422():
+    response=client.post(
+        "/transactions",
+        json={
+            "description": "Salary",
+            "kind": "income"
+        })    
+
+    assert response.status_code==422
+
+
+def test_create_transaction_invalid_amount_type_returns_422():
+    response=client.post(
+        "/transactions",
+        json={
+            "description": "Salary",
+            "amount": "abc",
+            "kind": "income"
+         }
+        )
+
+    assert response.status_code==422    
+
+
+
 
 
 
