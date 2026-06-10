@@ -25,6 +25,11 @@ def raise_http_error_for_result(result):
             detail=result["message"]
         )
 
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=result["message"]
+    )
+
 
 class TransactionInput(BaseModel):
     description: str
