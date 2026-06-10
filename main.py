@@ -64,11 +64,7 @@ def create_transaction(transaction_input: TransactionInput):
     )
     result = ledger.add_transaction(transaction)
 
-    if result["status"] == "error":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=result["message"]
-        )
+    raise_http_error_for_result(result)
 
     return result
 
