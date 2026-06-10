@@ -76,11 +76,7 @@ def create_transaction(transaction_input: TransactionInput):
 def delete_transaction(description: str):
     result = ledger.delete_transaction(description)
 
-    if result["status"] == "error":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=result["message"]
-        )
+    raise_http_error_for_result(result)
 
     return result
 
