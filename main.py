@@ -1,3 +1,4 @@
+from itertools import count
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 
@@ -18,12 +19,6 @@ def raise_http_error_for_result(result):
     if result["message"] in ["Transaction not found", "File not found"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=result["message"]
-        )
-
-    if result["message"] in ["Invalid transaction data", "Invalid amount"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
             detail=result["message"]
         )
 
@@ -94,6 +89,22 @@ def create_transaction(transaction_input: TransactionInput):
 
     return result
 
+@app.get("/transactions/summary")   
+def get_summary():
+    expense_count = 0
+    income_count = 0
+    for transaction in ledger.transactions:
+        if transaction.kind=="income":
+            income_count+=1
+        if transaction.kind=="expense":
+            expense_count+=1      
+    return {
+  "count": len(ledger.transactions),
+  "income_count": income_count,
+  "expense_count": expense_count,
+  "balance": ledger.get_balance()
+}    
+
 @app.delete("/transactions/{description}")
 def delete_transaction(description: str):
     result = ledger.delete_transaction(description)
@@ -126,4 +137,6 @@ def save_transactions():
 def load_transactions():
     result = ledger.load_from_file(DATA_FILE)
     raise_http_error_for_result(result)
-    return result        
+    return result
+
+

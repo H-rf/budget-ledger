@@ -544,6 +544,42 @@ def test_load_transactions_is_atomic_when_file_has_invalid_record(tmp_path, monk
         ]
     }
 
+def test_transaction_summary_empty_ledger():
+    response = client.get("/transactions/summary")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "count": 0,
+        "income_count": 0,
+        "expense_count": 0,
+        "balance": {
+            "income": 0,
+            "expense": 0,
+            "balance": 0
+        }
+    } 
+
+def test_transaction_summary_after_income_and_expense():
+    income_response = create_transaction()
+    assert income_response.status_code == 201
+
+    expense_response = create_transaction("Rent", 300, "expense")
+    assert expense_response.status_code == 201
+
+    response = client.get("/transactions/summary")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "count": 2,
+        "income_count": 1,
+        "expense_count": 1,
+        "balance": {
+            "income": 1000,
+            "expense": 300,
+            "balance": 700
+        }
+    }       
+
 
 
 
