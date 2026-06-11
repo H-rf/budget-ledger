@@ -427,6 +427,42 @@ def test_save_transactions_route_saves_to_file(tmp_path, monkeypatch):
     assert response.json() == {"status": "ok"}
     assert file_path.exists()    
 
+def test_load_transactions_route_loads_from_file(tmp_path, monkeypatch):
+    file_path = tmp_path / "transactions.json"
+    monkeypatch.setattr("main.DATA_FILE", str(file_path))
+
+    file_path.write_text(
+        '[{"description": "Salary", "amount": 1000, "kind": "income"}]'
+    )
+
+    before_response = client.get("/transactions")
+
+    assert before_response.status_code == 200
+    assert before_response.json() == {
+        "status": "ok",
+        "transactions": []
+    }
+
+    response = client.post("/transactions/load")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+    transactions_response = client.get("/transactions")
+
+    assert transactions_response.status_code == 200
+    assert transactions_response.json() == {
+        "status": "ok",
+        "transactions": [
+            {
+                "description": "Salary",
+                "amount": 1000,
+                "kind": "income"
+            }
+        ]
+    }
+
+
 
 
 
