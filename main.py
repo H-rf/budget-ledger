@@ -50,6 +50,12 @@ def get_balance():
 
 @app.get("/transactions")
 def get_transactions(kind: str | None = None):
+    if kind is not None and kind not in ["income", "expense"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid kind"
+        )
+
     transactions = []
 
     for transaction in ledger.transactions:

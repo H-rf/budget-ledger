@@ -312,6 +312,12 @@ def test_get_transactions_filters_by_kind():
         ]
     }
 
+def test_get_transactions_invalid_kind_filter_returns_400():
+    response = client.get("/transactions?kind=banana")
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid kind"}
+
 
 
 
