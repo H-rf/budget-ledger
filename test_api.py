@@ -500,6 +500,19 @@ def test_load_transactions_invalid_json_returns_400(tmp_path, monkeypatch):
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid JSON"}
 
+def test_load_transactions_invalid_transaction_data_returns_400(tmp_path, monkeypatch):
+    file_path = tmp_path / "transactions.json"
+    monkeypatch.setattr("main.DATA_FILE", str(file_path))
+
+    file_path.write_text(
+        '[{"description": "Salary", "amount": true, "kind": "income"}]'
+    )
+
+    response = client.post("/transactions/load")
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid transaction data"}    
+
 
 
 
