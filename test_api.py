@@ -489,6 +489,17 @@ def test_load_transactions_missing_file_returns_400(tmp_path, monkeypatch):
     assert response.json() == {"detail": "File not found"}    
 
 
+def test_load_transactions_invalid_json_returns_400(tmp_path, monkeypatch):
+    file_path = tmp_path / "transactions.json"
+    monkeypatch.setattr("main.DATA_FILE", str(file_path))
+
+    file_path.write_text("not valid json")
+
+    response = client.post("/transactions/load")
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid JSON"}
+
 
 
 

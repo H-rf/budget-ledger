@@ -27,6 +27,12 @@ def raise_http_error_for_result(result):
             detail=result["message"]
         )
 
+    if result["message"] in ["Invalid transaction data", "Invalid amount", "Invalid JSON"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["message"]
+        )
+
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail=result["message"]
