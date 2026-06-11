@@ -513,6 +513,38 @@ def test_load_transactions_invalid_transaction_data_returns_400(tmp_path, monkey
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid transaction data"}    
 
+def test_load_transactions_is_atomic_when_file_has_invalid_record(tmp_path, monkeypatch):
+    file_path = tmp_path / "transactions.json"
+    monkeypatch.setattr("main.DATA_FILE", str(file_path))
+
+    create_response = create_transaction("Existing", 50, "income")
+    assert create_response.status_code == 201
+
+    file_path.write_text(
+        '[{"description": "Salary", "amount": 1000, "kind": "income"}, '
+        '{"description": "Broken", "amount": true, "kind": "income"}]'
+    )
+
+    response = client.post("/transactions/load")
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid transaction data"}
+
+    transactions_response = client.get("/transactions")
+
+    assert transactions_response.status_code == 200
+    assert transactions_response.json() == {
+        "status": "ok",
+        "transactions": [
+            {
+                "description": "Existing",
+                "amount": 50,
+                "kind": "income"
+            }
+        ]
+    }
+
+
 
 
 
