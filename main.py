@@ -9,6 +9,8 @@ app = FastAPI()
 
 ledger = BudgetLedger()
 
+DATA_FILE = "transactions.json"
+
 def raise_http_error_for_result(result):
     if result["status"] != "error":
         return
@@ -106,4 +108,10 @@ def find_transaction(description: str):
 def update_transaction_amount(description: str, amount_update: AmountUpdate):
     result = ledger.update_amount(description, amount_update.amount)
     raise_http_error_for_result(result)
-    return result          
+    return result      
+
+@app.post("/transactions/save")
+def save_transactions():
+    result = ledger.save_to_file(DATA_FILE)
+    raise_http_error_for_result(result)
+    return result        

@@ -15,6 +15,57 @@ def create_transaction(description="Salary", amount=1000, kind="income"):
         }
     )
 
+# This fixture keeps API tests independent from each other.
+
+#
+
+# The FastAPI app uses one global in-memory ledger object:
+
+# ledger = BudgetLedger()
+
+#
+
+# If one test creates a transaction, that transaction stays inside
+
+# ledger.transactions unless we manually clear it.
+
+#
+
+# Without this reset:
+
+# Test A could create "Salary"
+
+# Test B could expect an empty ledger
+
+# Test B might fail because "Salary" is still there from Test A
+
+#
+
+# @pytest.fixture:
+
+# tells pytest this function is test setup/cleanup support code.
+
+#
+
+# autouse=True:
+
+# means pytest runs this fixture automatically for every test,
+
+# even if the test does not mention reset_ledger by name.
+
+#
+
+# ledger.transactions.clear():
+
+# empties the in-memory transaction list before each test starts.
+
+#
+
+# Result:
+
+# every test begins with a clean ledger,
+
+# so tests do not depend on leftovers from previous tests.
 
 @pytest.fixture(autouse=True)
 def reset_ledger():
@@ -317,6 +368,64 @@ def test_get_transactions_invalid_kind_filter_returns_400():
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid kind"}
+
+
+
+
+# This test below checks that the API save route writes to a file,
+
+# but we do NOT want the test to create/modify a real project file.
+
+#
+
+# tmp_path:
+
+# pytest gives this test a temporary folder.
+
+# Any files created there are safe test files, not real project files.
+
+#
+
+# file_path = tmp_path / "transactions.json":
+
+# creates a temporary path for a fake test version of transactions.json.
+
+#
+
+# monkeypatch.setattr("main.DATA_FILE", str(file_path)):
+
+# temporarily replaces DATA_FILE inside main.py.
+
+# "main.DATA_FILE" means: the DATA_FILE variable that lives in main.py.
+
+# str(file_path) converts the Path object into a normal string path,
+
+# which matches what save_to_file/open can safely use.
+
+#
+
+# So during this test only:
+
+# main.DATA_FILE is not "transactions.json"
+
+# main.DATA_FILE is the temporary test file path.
+
+#
+
+# After the test finishes, pytest restores the original DATA_FILE automatically.
+
+def test_save_transactions_route_saves_to_file(tmp_path, monkeypatch):
+    file_path = tmp_path / "transactions.json"
+    monkeypatch.setattr("main.DATA_FILE", str(file_path))
+
+    create_response = create_transaction()
+    assert create_response.status_code == 201
+
+    response = client.post("/transactions/save")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    assert file_path.exists()    
 
 
 
