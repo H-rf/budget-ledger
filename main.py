@@ -114,4 +114,10 @@ def update_transaction_amount(description: str, amount_update: AmountUpdate):
 def save_transactions():
     result = ledger.save_to_file(DATA_FILE)
     raise_http_error_for_result(result)
+    return result    
+
+@app.post("/transactions/load")
+def load_transactions():
+    result = ledger.load_from_file(DATA_FILE)
+    raise_http_error_for_result(result)
     return result        
