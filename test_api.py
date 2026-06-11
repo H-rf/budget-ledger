@@ -578,7 +578,28 @@ def test_transaction_summary_after_income_and_expense():
             "expense": 300,
             "balance": 700
         }
-    }       
+    }   
+
+def test_summary_after_two_income_transactions_and_one_expense_transaction():
+    income_response1 = create_transaction()
+    assert income_response1.status_code == 201
+    income_response2 = create_transaction("Bonus", 500, "income")  
+    assert income_response2.status_code == 201
+    expense_response = create_transaction("Rent", 300, "expense")  
+    assert expense_response.status_code == 201
+    response = client.get("/transactions/summary")
+    assert response.status_code == 200
+    assert response.json() == {
+                           "count": 3,
+                           "income_count": 2,
+                           "expense_count": 1,
+                           "balance": {
+                                    "income": 1500,
+                                    "expense": 300,
+                                    "balance": 1200
+                               }
+                          }   
+
 
 
 
