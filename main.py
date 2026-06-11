@@ -15,7 +15,7 @@ def raise_http_error_for_result(result):
     if result["status"] != "error":
         return
 
-    if result["message"] == "Transaction not found":
+    if result["message"] in ["Transaction not found", "File not found"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=result["message"]

@@ -402,7 +402,24 @@ def test_get_transactions_invalid_kind_filter_returns_400():
 
 # which matches what save_to_file/open can safely use.
 
+## tmp_path is a temporary test folder created by pytest.
+
+# file_path = tmp_path / "transactions.json" creates a full temporary file path,
+
+# not just the name "transactions.json".
+
 #
+
+# str(file_path) converts that full Path object into a normal string path.
+
+# Example:
+
+# C:...\Temp\pytest-...\transactions.json
+
+#
+
+# This keeps the test file separate from the real project transactions.json.
+
 
 # So during this test only:
 
@@ -461,6 +478,15 @@ def test_load_transactions_route_loads_from_file(tmp_path, monkeypatch):
             }
         ]
     }
+
+def test_load_transactions_missing_file_returns_400(tmp_path, monkeypatch):
+    file_path = tmp_path / "missing.json"
+    monkeypatch.setattr("main.DATA_FILE", str(file_path))
+
+    response = client.post("/transactions/load")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "File not found"}    
 
 
 
