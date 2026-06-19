@@ -1,6 +1,7 @@
-from itertools import count
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
+
+import database_functions as db
 
 from ledger import BudgetLedger
 from models import Transaction
@@ -42,28 +43,44 @@ class TransactionInput(BaseModel):
 class AmountUpdate(BaseModel):
     amount: int | float
 
+def transaction_row_to_dict(row):
+    return {
+        "id": row[0],
+        "description": row[1],
+        "amount": row[2],
+        "kind": row[3] 
+            }
+
+
 @app.get("/")
 def home():
     return {"message": "Budget Ledger API"}
 
-
 @app.get("/balance")
-def get_balance():
-    return ledger.get_balance()
+def get_balance_endpoint():
+    balance = db.get_balance()
+    return {
+        "status": "ok",
+        "balance": balance
+    }
 
 @app.get("/transactions")
 def get_transactions(kind: str | None = None):
-    if kind is not None and kind not in ["income", "expense"]:
+    try:
+        if kind is None:
+            rows = db.get_all_transactions()
+        else:
+            rows = db.get_transactions_by_kind(kind)
+    except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid kind"
+            detail=str(error)
         )
 
     transactions = []
 
-    for transaction in ledger.transactions:
-        if kind is None or transaction.kind == kind:
-            transactions.append(ledger.transaction_to_dict(transaction))
+    for row in rows:
+        transactions.append(transaction_row_to_dict(row))
 
     return {
         "status": "ok",
@@ -72,38 +89,54 @@ def get_transactions(kind: str | None = None):
 
 @app.get("/transactions/count")
 def get_transaction_count():
-    return {"count": len(ledger.transactions)}
+    rows = db.get_all_transactions()
+    return {
+         "status": "ok",
+         "count": len(rows)
+        }
 
 
 
 @app.post("/transactions", status_code=status.HTTP_201_CREATED)
 def create_transaction(transaction_input: TransactionInput):
-    transaction = Transaction(
-        transaction_input.description,
-        transaction_input.amount,
-        transaction_input.kind
-    )
-    result = ledger.add_transaction(transaction)
+    try:
+        new_id = db.add_transaction(
+            transaction_input.description, 
+            transaction_input.amount,
+            transaction_input.kind
+        )
+    
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error)
+        )
 
-    raise_http_error_for_result(result)
-
-    return result
+    return {
+      "status": "ok",
+      "id": new_id
+    }
 
 @app.get("/transactions/summary")   
-def get_summary():
+def get_summary_endpoint():
     expense_count = 0
     income_count = 0
-    for transaction in ledger.transactions:
-        if transaction.kind=="income":
+    rows = db.get_all_transactions()
+    for row in rows:
+        if row[3] == "income":
             income_count+=1
-        if transaction.kind=="expense":
-            expense_count+=1      
+        elif row[3] == "expense":
+            expense_count+=1 
+    summary = db.get_summary()            
     return {
-  "count": len(ledger.transactions),
-  "income_count": income_count,
-  "expense_count": expense_count,
-  "balance": ledger.get_balance()
-}    
+        "status":"ok",
+        "count":len(rows),
+        "income_count":income_count,
+        "expense_count":expense_count,
+        "total_income": summary["income"],
+        "total_expense": summary["expense"],
+        "balance": summary["balance"]
+      }    
 
 @app.delete("/transactions/{description}")
 def delete_transaction(description: str):

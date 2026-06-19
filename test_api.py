@@ -1,7 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from main import app, ledger
+from main import app
+import database_functions as db
 
 client = TestClient(app)
 
@@ -15,61 +16,13 @@ def create_transaction(description="Salary", amount=1000, kind="income"):
         }
     )
 
-# This fixture keeps API tests independent from each other.
-
-#
-
-# The FastAPI app uses one global in-memory ledger object:
-
-# ledger = BudgetLedger()
-
-#
-
-# If one test creates a transaction, that transaction stays inside
-
-# ledger.transactions unless we manually clear it.
-
-#
-
-# Without this reset:
-
-# Test A could create "Salary"
-
-# Test B could expect an empty ledger
-
-# Test B might fail because "Salary" is still there from Test A
-
-#
-
-# @pytest.fixture:
-
-# tells pytest this function is test setup/cleanup support code.
-
-#
-
-# autouse=True:
-
-# means pytest runs this fixture automatically for every test,
-
-# even if the test does not mention reset_ledger by name.
-
-#
-
-# ledger.transactions.clear():
-
-# empties the in-memory transaction list before each test starts.
-
-#
-
-# Result:
-
-# every test begins with a clean ledger,
-
-# so tests do not depend on leftovers from previous tests.
-
 @pytest.fixture(autouse=True)
-def reset_ledger():
-    ledger.transactions.clear()
+def temp_db(tmp_path, monkeypatch):
+    test_db = tmp_path/"test_budget.db"
+
+    monkeypatch.setattr(db, "DB_NAME", str(test_db))
+
+    db.create_transactions_table()
 
 
 def test_get_balance_initially_zero():
@@ -598,10 +551,91 @@ def test_summary_after_two_income_transactions_and_one_expense_transaction():
                                     "expense": 300,
                                     "balance": 1200
                                }
-                          }   
+                        }   
+
+def test_get_transactions_returns_database_rows():
+    salary_id = db.add_transaction("Salary", 4000, "income")
+    assert salary_id == 1
+    response = client.get("/transactions")
+    assert response.status_code == 200
+    assert response.json()=={
+                       "status": "ok",
+                       "transactions":[
+                       {"id": 1,
+                       "description": "Salary",
+                       "amount": 4000.0,
+                       "kind": "income"
+                       }
+                       ]
+                    }
+
+def test_get_transactions_filters_database_rows_by_kind():
+    income_id = db.add_transaction("Salary", 4000, "income")
+    assert income_id == 1
+    expense_id = db.add_transaction("groceries", 300, "expense")
+    assert expense_id == 2
+    response = client.get("/transactions?kind=expense")
+    assert response.status_code == 200
+    assert response.json()=={
+                       "status": "ok",
+                       "transactions":[
+                       {"id": expense_id,
+                       "description": "groceries",
+                       "amount": 300.0,
+                       "kind": "expense"
+                       }
+                       ]
+                    }
+
+def test_get_transactions_invalid_kind_returns_400():
+    response = client.get("/transactions?kind=food")
+    assert response.status_code == 400
+    assert response.json()=={"detail": "kind must be 'income' or 'expense'"}
+
+def test_get_transactions_count_uses_database_rows():
+    income_id = db.add_transaction("Salary", 4000, "income")
+    assert income_id == 1
+    expense_id = db.add_transaction("groceries", 300, "expense")
+    assert expense_id == 2
+    response = client.get("/transactions/count")
+    assert response.status_code == 200
+    assert response.json()=={"status": "ok", "count": 2}
+
+def test_get_balance_uses_database_rows():
+    income_id = db.add_transaction("Salary", 4000, "income")
+    assert income_id == 1
+    expense_id = db.add_transaction("groceries", 300, "expense")
+    assert expense_id == 2
+
+    response = client.get("/balance")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "balance": 3700.0}
+
+def test_get_transactions_summary_uses_database_rows():
+    income_id = db.add_transaction("Salary", 4000, "income")
+    assert income_id == 1
+    expense_id = db.add_transaction("groceries", 300, "expense")
+    assert expense_id == 2
+
+    response = client.get("/transactions/summary")
+
+    assert response.status_code == 200
+    assert response.json()=={
+    "status": "ok",
+    "count": 2,
+    "income_count": 1,
+    "expense_count": 1,
+    "total_income": 4000.0,
+    "total_expense": 300.0,
+    "balance": 3700.0
+}
 
 
 
+
+
+    
 
 
 
