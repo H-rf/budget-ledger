@@ -3,36 +3,7 @@ from pydantic import BaseModel
 
 import database_functions as db
 
-from ledger import BudgetLedger
-from models import Transaction
-
-
 app = FastAPI()
-
-ledger = BudgetLedger()
-
-DATA_FILE = "transactions.json"
-
-def raise_http_error_for_result(result):
-    if result["status"] != "error":
-        return
-
-    if result["message"] in ["Transaction not found", "File not found"]:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=result["message"]
-        )
-
-    if result["message"] in ["Invalid transaction data", "Invalid amount", "Invalid JSON"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=result["message"]
-        )
-
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail=result["message"]
-    )
 
 
 class TransactionInput(BaseModel):
@@ -49,7 +20,7 @@ def transaction_row_to_dict(row):
         "description": row[1],
         "amount": row[2],
         "kind": row[3] 
-            }
+    }
 
 
 @app.get("/")
@@ -124,9 +95,9 @@ def get_summary_endpoint():
     rows = db.get_all_transactions()
     for row in rows:
         if row[3] == "income":
-            income_count+=1
+            income_count += 1
         elif row[3] == "expense":
-            expense_count+=1 
+            expense_count += 1 
     summary = db.get_summary()            
     return {
         "status":"ok",
@@ -138,38 +109,56 @@ def get_summary_endpoint():
         "balance": summary["balance"]
       }    
 
-@app.delete("/transactions/{description}")
-def delete_transaction(description: str):
-    result = ledger.delete_transaction(description)
+@app.delete("/transactions/{transaction_id}")
+def delete_transaction(transaction_id: int):
+    try:
+        affected_rows = db.delete_transaction_by_id(transaction_id)
 
-    raise_http_error_for_result(result)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error)
+        )
+    if affected_rows == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction not found"
+        )
+    return {"status": "ok"}
 
-    return result
+@app.get("/transactions/{transaction_id}")
+def find_transaction(transaction_id: int):
+    try:
+        row = db.get_transaction_by_id(transaction_id)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error)
+        )
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction not found"
+        )
+    return{
+        "status": "ok",
+        "transaction": transaction_row_to_dict(row)
+    }
 
-@app.get("/transactions/{description}")
-def find_transaction(description: str):
-    result = ledger.find_transaction(description)
-
-    raise_http_error_for_result(result)
-
-    return result
-
-@app.patch("/transactions/{description}")
-def update_transaction_amount(description: str, amount_update: AmountUpdate):
-    result = ledger.update_amount(description, amount_update.amount)
-    raise_http_error_for_result(result)
-    return result      
-
-@app.post("/transactions/save")
-def save_transactions():
-    result = ledger.save_to_file(DATA_FILE)
-    raise_http_error_for_result(result)
-    return result    
-
-@app.post("/transactions/load")
-def load_transactions():
-    result = ledger.load_from_file(DATA_FILE)
-    raise_http_error_for_result(result)
-    return result
+@app.patch("/transactions/{transaction_id}")
+def update_transaction_amount(transaction_id: int, amount_update: AmountUpdate):
+    try:
+        affected_rows = db.update_transaction_by_id(transaction_id, amount_update.amount)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error)
+        )
+    if affected_rows == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction not found"
+        ) 
+    return {"status": "ok"}
 
 
