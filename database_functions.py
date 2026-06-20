@@ -233,20 +233,6 @@ def get_full_summary():
         "balance": balance
     }
 
-if __name__ == "__main__":
-    before = get_transaction_by_id(5)
-    print("before:", before)
-
-    try:
-        update_transaction_by_id(5, -999)
-    except ValueError as error:
-        print("error:", error)
-
-    after = get_transaction_by_id(5)
-    print("after:", after)
-
-    print("same:", before == after)
-
 
 
 
