@@ -203,6 +203,36 @@ def get_summary():
             "balance": balance
            } 
 
+def get_full_summary():
+    transactions = get_all_transactions()
+    count = len(transactions)
+    income_count = 0
+    expense_count = 0
+    total_income = 0
+    total_expense = 0
+
+    for transaction in transactions:
+        amount = transaction[2]
+        kind = transaction[3]
+
+        if kind == "income":
+            income_count += 1
+            total_income += amount
+        elif kind == "expense":
+            expense_count += 1
+            total_expense += amount
+
+    balance = total_income - total_expense
+
+    return {
+        "count": count,
+        "income_count": income_count,
+        "expense_count": expense_count,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "balance": balance
+    }
+
 if __name__ == "__main__":
     before = get_transaction_by_id(5)
     print("before:", before)

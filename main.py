@@ -98,26 +98,14 @@ def create_transaction(transaction_input: TransactionInput):
       "id": new_id
     }
 
-@app.get("/transactions/summary")   
+@app.get("/transactions/summary")
 def get_summary_endpoint():
-    expense_count = 0
-    income_count = 0
-    rows = db.get_all_transactions()
-    for row in rows:
-        if row[3] == "income":
-            income_count += 1
-        elif row[3] == "expense":
-            expense_count += 1 
-    summary = db.get_summary()            
+    summary = db.get_full_summary()
+
     return {
-        "status":"ok",
-        "count":len(rows),
-        "income_count":income_count,
-        "expense_count":expense_count,
-        "total_income": summary["income"],
-        "total_expense": summary["expense"],
-        "balance": summary["balance"]
-      }    
+        "status": "ok",
+        **summary
+    }
 
 @app.delete("/transactions/{transaction_id}")
 def delete_transaction(transaction_id: int):

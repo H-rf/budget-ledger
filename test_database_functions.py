@@ -271,6 +271,19 @@ def test_get_transactions_by_kind_normalizes_kind():
     expense_transaction = db.get_transactions_by_kind(" Expense ")
     assert expense_transaction == [(groceries_id, "Groceries", 75.0, "expense")]
 
+def test_get_full_summary_with_income_and_expense():
+    db.add_transaction("Salary", 4000, "income")
+    db.add_transaction("groceries", 300, "expense")
+
+    assert db.get_full_summary() == {
+        "count": 2,
+        "income_count": 1,
+        "expense_count": 1,
+        "total_income": 4000.0,
+        "total_expense": 300.0,
+        "balance": 3700.0
+    }    
+
 
 
 
