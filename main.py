@@ -14,6 +14,22 @@ class TransactionInput(BaseModel):
 class AmountUpdate(BaseModel):
     amount: int | float
 
+
+
+def raise_bad_request(error):
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=str(error)
+    )
+
+
+def raise_transaction_not_found():
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Transaction not found"
+    )
+
+
 def transaction_row_to_dict(row):
     return {
         "id": row[0],
@@ -43,10 +59,7 @@ def get_transactions(kind: str | None = None):
         else:
             rows = db.get_transactions_by_kind(kind)
     except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error)
-        )
+        raise_bad_request(error)
 
     transactions = []
 
@@ -78,10 +91,7 @@ def create_transaction(transaction_input: TransactionInput):
         )
     
     except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error)
-        )
+        raise_bad_request(error)
 
     return {
       "status": "ok",
@@ -115,15 +125,9 @@ def delete_transaction(transaction_id: int):
         affected_rows = db.delete_transaction_by_id(transaction_id)
 
     except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error)
-        )
+        raise_bad_request(error)
     if affected_rows == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found"
-        )
+        raise_transaction_not_found()
     return {"status": "ok"}
 
 @app.get("/transactions/{transaction_id}")
@@ -131,15 +135,9 @@ def find_transaction(transaction_id: int):
     try:
         row = db.get_transaction_by_id(transaction_id)
     except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error)
-        )
+        raise_bad_request(error)
     if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found"
-        )
+        raise_transaction_not_found()
     return{
         "status": "ok",
         "transaction": transaction_row_to_dict(row)
@@ -150,15 +148,9 @@ def update_transaction_amount(transaction_id: int, amount_update: AmountUpdate):
     try:
         affected_rows = db.update_transaction_by_id(transaction_id, amount_update.amount)
     except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error)
-        )
+        raise_bad_request(error)
     if affected_rows == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transaction not found"
-        ) 
+        raise_transaction_not_found()
     return {"status": "ok"}
 
 
