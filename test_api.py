@@ -771,8 +771,69 @@ def test_delete_transaction_by_id_invalid_id_returns_400_and_keeps_existing_rows
     assert db.get_transaction_by_id(new_id)==(1, "Salary", 4000.0, "income")
     assert db.get_all_transactions()==[(1, "Salary", 4000.0, "income")]    
 
+def test_get_recent_transactions_endpoint_limit_is_2():
+    income_id = db.add_transaction("Salary", 4000, "income")
+    assert income_id == 1
+    expense_id = db.add_transaction("groceries", 300, "expense")
+    assert expense_id == 2
+    income_id = db.add_transaction("stocks", 40000, "income")
+    assert income_id == 3
+    expense_id = db.add_transaction("hobbies", 400, "expense")
+    assert expense_id == 4
 
-    
+    response=client.get("/transactions/recent?limit=2")
+
+    assert response.status_code ==200
+    data = response.json()
+
+    assert data["status"] == "ok"
+    assert len(data["transactions"]) == 2
+    assert data["transactions"][0]["description"] == "hobbies"
+    assert data["transactions"][1]["description"] == "stocks"
+
+def test_get_recent_transactions_endpoint_missing_limit_default_to_5():
+    income_id = db.add_transaction("Salary", 4000, "income")
+    assert income_id == 1
+    expense_id = db.add_transaction("groceries", 300, "expense")
+    assert expense_id == 2
+    income_id = db.add_transaction("stocks", 40000, "income")
+    assert income_id == 3
+    expense_id = db.add_transaction("hobbies", 400, "expense")
+    assert expense_id == 4
+    income_id = db.add_transaction("crypto", 40000, "income")
+    assert income_id == 5
+    expense_id = db.add_transaction("cars", 400, "expense")
+    assert expense_id == 6
+
+    response=client.get("/transactions/recent")
+
+    assert response.status_code ==200
+    data = response.json()
+
+    assert data["status"] == "ok"
+    assert len(data["transactions"]) == 5
+    assert data["transactions"][0]["description"] == "cars"
+    assert data["transactions"][1]["description"] == "crypto"
+    assert data["transactions"][2]["description"] == "hobbies"
+    assert data["transactions"][3]["description"] == "stocks"
+    assert data["transactions"][4]["description"] == "groceries"
+
+def test_get_recent_transactions_endpoint_limit_is_zero_returns_error_400():
+    response=client.get("/transactions/recent?limit=0")
+
+    assert response.status_code ==400
+    assert response.json()["detail"] == "limit must be a positive integer"
+
+def test_get_recent_transactions_endpoint_limit_is_not_int_returns_error_422():
+    response=client.get("/transactions/recent?limit=abc")
+
+    assert response.status_code ==422
+
+
+
+
+
+
 
 
 

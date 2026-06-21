@@ -79,6 +79,25 @@ def get_transactions(kind: str | None = None):
         "transactions": transactions
     }
 
+@app.get("/transactions/recent")
+def get_recent_transactions_endpoint(limit:int = 5):
+    try:
+        rows = db.get_recent_transactions(limit)
+    
+    except ValueError as error:
+        raise_bad_request(error)
+    transactions = []
+
+    for row in rows:
+        transactions.append(transaction_row_to_dict(row))
+    
+    return {
+      "status": "ok",
+      "transactions": transactions
+}
+
+
+
 @app.get("/transactions/count")
 def get_transaction_count():
     rows = db.get_all_transactions()
@@ -148,5 +167,7 @@ def update_transaction_amount(transaction_id: int, amount_update: AmountUpdate):
     if affected_rows == 0:
         raise_transaction_not_found()
     return {"status": "ok"}
+
+
 
 

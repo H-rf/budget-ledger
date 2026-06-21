@@ -1,3 +1,4 @@
+from multiprocessing import connection
 import sqlite3
 
 DB_NAME = "budget.db"
@@ -21,10 +22,11 @@ def create_transactions_table():
 
 #create_transactions_table()
 
+
+
 def validate_transaction_id(transaction_id):
     if not isinstance(transaction_id,int) or isinstance(transaction_id,bool) or transaction_id<=0:
         raise ValueError("transaction_id must be a positive integer")
-
 
 def validate_description(description):
     if not isinstance(description, str) or description.strip() == "":
@@ -33,11 +35,9 @@ def validate_description(description):
     description = description.strip()
     return description
 
-
 def validate_amount(amount):
     if not isinstance(amount, (int, float)) or isinstance(amount, bool) or amount <= 0:
         raise ValueError("amount must be a positive number")
-
 
 def validate_kind(kind):
     if not isinstance(kind, str):
@@ -49,6 +49,11 @@ def validate_kind(kind):
         raise ValueError("kind must be 'income' or 'expense'")
     
     return kind
+
+def validate_limit(limit):
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:
+        raise ValueError("limit must be a positive integer")
+
 
 
 def add_transaction(description, amount, kind):
@@ -118,6 +123,21 @@ def get_transaction_by_id(transaction_id):
 
 #transaction = get_transaction_by_id(999)
 #print(transaction)
+
+def get_recent_transactions(limit):
+    validate_limit(limit)
+
+    connection = sqlite3.connect(DB_NAME)
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM transactions ORDER BY id DESC limit ?",
+    (limit,)
+    )
+    
+    rows = cursor.fetchall()
+    connection.close()
+    return rows
+
 
 def update_transaction_by_id(transaction_id, new_amount):
     validate_transaction_id(transaction_id)

@@ -284,7 +284,60 @@ def test_get_full_summary_with_income_and_expense():
         "balance": 3700.0
     }    
 
+def test_get_recent_transactions_returns_newest_rows_first():
+    db.add_transaction("Salary", 4000, "income")
+    db.add_transaction("Groceries", 300, "expense")
+    db.add_transaction("Bonus", 500, "income")
 
+    rows = db.get_recent_transactions(2)
+
+    assert len(rows) == 2
+    assert rows[0][1] == "Bonus"
+    assert rows[1][1] == "Groceries"    
+
+def test_get_recent_transactions_empty_db_returns_empty_list():
+    rows = db.get_recent_transactions(5)
+
+    assert rows == []
+
+
+def test_get_recent_transactions_limit_greater_than_row_count_returns_all_rows():
+    db.add_transaction("Salary", 4000, "income")
+    db.add_transaction("Groceries", 300, "expense")
+
+    rows = db.get_recent_transactions(10)
+
+    assert len(rows) == 2
+    assert rows[0][1] == "Groceries"
+    assert rows[1][1] == "Salary"
+
+
+def test_get_recent_transactions_limit_zero_raises_error():
+    with pytest.raises(ValueError) as error:
+        db.get_recent_transactions(0)
+
+    assert str(error.value) == "limit must be a positive integer"
+
+
+def test_get_recent_transactions_negative_limit_raises_error():
+    with pytest.raises(ValueError) as error:
+        db.get_recent_transactions(-1)
+
+    assert str(error.value) == "limit must be a positive integer"
+
+
+def test_get_recent_transactions_bool_limit_raises_error():
+    with pytest.raises(ValueError) as error:
+        db.get_recent_transactions(True)
+
+    assert str(error.value) == "limit must be a positive integer"
+
+
+def test_get_recent_transactions_non_integer_limit_raises_error():
+    with pytest.raises(ValueError) as error:
+        db.get_recent_transactions("5")
+
+    assert str(error.value) == "limit must be a positive integer"
 
 
 
