@@ -1,4 +1,3 @@
-from multiprocessing import connection
 import sqlite3
 
 DB_NAME = "budget.db"
